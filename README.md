@@ -1,2 +1,1 @@
-1. Create APIs of your sheets using sheetsu.com
-2. Drop the url in the input box
+Everything is pretty much in the [live demo](http://roastduckalamode.github.io/fromSheetsToJekyll/).
