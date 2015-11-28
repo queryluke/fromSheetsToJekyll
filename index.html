@@ -237,8 +237,9 @@
                 var key = $('[name="dataFileKey"]:checked').val();
                 var returnString = '';
                 $.each(data,function(index,value){
-                    var dataKey = value[key].replace(/[^\w\s\d]/gi,'');
-                    dataKey = dataKey.replace(/[\s]/gi,'-');
+                    /*var dataKey = value[key].replace(/[^\w\s\d]/gi,'');
+                    dataKey = dataKey.replace(/[\s]/gi,'-');*/
+                    var dataKey = value[key].replace(/[\s]/gi,'-');
                     returnString += dataKey+':\n';
                     $.each(value,function(i,v){
                         var normIndex = i.replace(/[^\w\s\d]/gi,'');
@@ -288,38 +289,6 @@
             }
         }
 
-                        /*case 'check':
-                            if(response.status == 200){
-                                $('#getUrlFeedback, #getUrlAlert, #apiOk').removeClass('hidden');
-                                $('#getUrl').parents('.form-group').addClass('has-feedback has-success');
-                                var singleResponse = response.result[0];
-                                $.each(singleResponse,function(i,v){
-                                    var normIndex = i.replace(' ','-');
-                                   $('#dataFileKey').append('<div class="radio"><label><input type="radio" name="dataFileKey" id="'+normIndex+'" value="'+i+'">'+i+'</label></div>');
-                                });
-                            }
-                            break;
-                        case 'simpleJson':
-                            $('#response').html(JSON.stringify(response.result));
-                            break;
-                        case 'dataFile':
-                            var key = $('[name="dataFileKey"]:checked').val();
-                            var returnString = '';
-                            $.each(response.result,function(index,value){
-                                var dataKey = value[key].replace(/[^\w\s\d]/gi,'');
-                                dataKey = dataKey.replace(/[\s]/gi,'-');
-                                returnString += dataKey+':\n';
-                                $.each(value,function(i,v){
-                                    returnString += '  '+i+': '+v+'\n';
-                                });
-                                returnString += '\n';
-                            });
-                            $('#response').html(returnString);
-                            break;
-                    }
-                }
-            });
-        }*/
 
         $('#checkUrl').click(function(){
             getSheet('checkUrl');
