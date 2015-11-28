@@ -245,7 +245,7 @@
                         var normIndex = i.replace(/[^\w\s\d]/gi,'');
                         normIndex = normIndex.replace(/[\s]/gi,'-');
                         if($('#'+normIndex+'-text').prop('checked')){
-                            returnString += '  '+i+': |\n'+v+'\n';
+                            returnString += '  '+i+': |\r    '+v+'\n';
                         } else {
                             returnString += '  '+i+': '+v+'\n';
                         }
