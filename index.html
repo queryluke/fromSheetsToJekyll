@@ -95,7 +95,8 @@
                         <label for="addFrontMatter">Add front matter</label>
                         <textarea id="addFrontMatter" class="form-control"></textarea>
                         <span class="help-block">
-                            To include sheets data as front matter, provide a name, colon, then the normalized sheets key wrapped in brackets. eg. <code>title: [Presentation-Title]</code>
+                            <strong>DO NOT INCLUDE THE <code>title:</code> front matter. This script will use the value from File Title below</strong><br>
+                            To include sheets data as front matter, provide a name, colon, then the normalized sheets key wrapped in brackets. eg. <code>location: [Presentation-Location]</code>
                             <br>Additionally, you can make a list of associated values using hyphen+space. e.g.
                             <br>
                             <code>
@@ -107,15 +108,15 @@
                         </span>
                     </div>
                     <div class="form-group">
-                        <label for="jekyllContent">Select the input you want to use as the content</label>
-                        <select name="jekyllContent" id="jekyllContent" class="form-control"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="fileTitle">Select the input you want to use as the file's title</label>
+                        <label for="fileTitle">Title: Select the input you want to use as the file's title</label>
                         <select name="fileTitle" id="fileTitle" class="form-control"></select>
                     </div>
                     <div class="form-group">
-                        <label for="fileDate">Enter a date to prepend to the file titles</label>
+                        <label for="jekyllContent">Content: Select the input you want to use as the content</label>
+                        <select name="jekyllContent" id="jekyllContent" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fileDate">Date: Enter a date to prepend to the file titles</label>
                         <input type="text" class="form-control" id="fileDate" name="fileDate" value="2016-03-07">
                         <span class="help-block">yyyy-mm-dd</span>
                     </div>
@@ -264,17 +265,20 @@
                     var content = value[key];
                     var fileTitle =  value[fileTitleKey].replace(/[^\w\s\d]/gi,'');
                     fileTitle = fileTitle.replace(/[\s]/gi,'-');
+                    var title = value[fileTitleKey];
+                    title = title.replace(':','&#58;');
                     $.each(value,function(i,v){
                         var normIndex = i.replace(/[^\w\s\d]/gi,'');
                         normIndex = normIndex.replace(/[\s]/gi,'-');
                         var re = new RegExp('\\['+normIndex+'\\]',"g");
                         template = template.replace(re,v);
                     });
-                    returnString += '---\n'+template+'\n---\r\n'+'<p>'+content+'</p>';
+                    returnString += '---\n'+template+'\n'+'title: '+title+'\n---\r\n'+'<p>'+content+'</p>';
                     zip.folder('test').file(fileDate+'-'+fileTitle+'.html',returnString);
+                    //$('#response').append(returnString);
                 });
-                /*$('#response').html(returnString);
-                $('#step5').removeClass('hidden');*/
+
+                //$('#step5').removeClass('hidden');
                 var a = document.createElement('a');
                 var odsFile = zip.generate({type:'blob'});
                 var url = window.URL.createObjectURL(odsFile);
