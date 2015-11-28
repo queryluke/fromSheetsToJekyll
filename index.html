@@ -221,7 +221,8 @@
                         frontMatterKeys += '<li>'+normIndex+'</li>';
                         contentSelect += '<option value="'+i+'">'+i+'</option>';
                         theHTML += '<tr><td><div class="radio"><label><input type="radio" name="dataFileKey" id="'+normIndex+'" value="'+i+'">'+i+'</label></td>';
-                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-text"><input type="checkbox" id="'+normIndex+'-text">Text?</label></td></tr>';
+                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-text"><input type="checkbox" id="'+normIndex+'-text">Text?</label></td>';
+                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-include"><input type="checkbox" id="'+normIndex+'-include">Include?</label></td></tr>';
                     });
                     theHTML += '</tbody></table>';
                     $('#dataFileKey').html(theHTML);
@@ -244,10 +245,12 @@
                     $.each(value,function(i,v){
                         var normIndex = i.replace(/[^\w\s\d]/gi,'');
                         normIndex = normIndex.replace(/[\s]/gi,'-');
-                        if($('#'+normIndex+'-text').prop('checked')){
-                            returnString += '  '+normIndex+': |\r    '+v+'\n';
-                        } else {
-                            returnString += '  '+normIndex+': '+v+'\n';
+                        if($('#'+normIndex+'-include').prop('checked')) {
+                            if ($('#' + normIndex + '-text').prop('checked')) {
+                                returnString += '  ' + normIndex + ': |\r    ' + v + '\n';
+                            } else {
+                                returnString += '  ' + normIndex + ': ' + v + '\n';
+                            }
                         }
                     });
                     returnString += '\n';
