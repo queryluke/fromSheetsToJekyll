@@ -41,7 +41,7 @@
             <h2>Step 1: <small>publish your sheet to the web, paste the URL below</small></h2>
             <div class="form-group">
                 <label for="getUrl" class="control-label">Sheetsu API URL</label>
-                <input type="text" value="https://docs.google.com/spreadsheets/d/1W87SnH9R8rCADygAKwVGTE5fvoWLac0IEAn8l40p34s/pubhtml" id="getUrl" class="form-control">
+                <input type="text" value="" id="getUrl" class="form-control">
                 <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true" id="getUrlFeedback"></span>
                 <span id="getUrlStatus" class="sr-only">gtg!</span>
             </div><!-- /input-group -->
@@ -98,6 +98,9 @@
                             <strong>DO NOT INCLUDE THE <code>title:</code> front matter. This script will use the value from File Title below</strong><br>
                             To include sheets data as front matter, provide a name, colon, then the normalized sheets key wrapped in brackets. eg. <code>location: [Presentation-Location]</code>
                             <br>Additionally, you can make a list of associated values using hyphen+space. e.g.
+                            <br>
+                            <br>If the content is sensitive but you want to use it as a key to other content (e.g. email) you can add <code>|hash</code> to the end of the key.
+                            <br>You can slugify the key by adding <code>|slug</code> to the end of the key.
                             <br>
                             <code>
                                 speakers:<br>
@@ -186,6 +189,21 @@
             $( "#loader" ).removeClass('show');
         });
 
+        String.prototype.hashCode = function() {
+            var hash = 0, i, chr, len;
+            if (this.length){
+                for (i = 0, len = this.length; i < len; i++) {
+                    chr   = this.charCodeAt(i);
+                    hash  = ((hash << 5) - hash) + chr;
+                    //hash |= 0; // Convert to 32bit integer
+                }
+                if(hash < 0){
+                    hash = hash * -1;
+                }
+            }
+            return hash;
+        };
+
         function getSheet(wtd) {
 
             if (wtd == 'dataFile') {
@@ -223,7 +241,8 @@
                         theHTML += '<tr><td><div class="radio"><label><input type="radio" name="dataFileKey" id="'+normIndex+'" value="'+i+'">'+i+'</label></td>';
                         theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-text"><input type="checkbox" id="'+normIndex+'-text">Text?</label></td>';
                         theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-include"><input type="checkbox" id="'+normIndex+'-include" checked>Include?</label></td>';
-                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-foreign-key"><input type="checkbox" id="'+normIndex+'-foreign-key">Key?</label></td></tr>';
+                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-slug"><input type="checkbox" id="'+normIndex+'-slug">Slugify?</label></td>';
+                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-hash"><input type="checkbox" id="'+normIndex+'-hash">Hash?</label></td></tr>';
                     });
                     theHTML += '</tbody></table>';
                     $('#dataFileKey').html(theHTML);
@@ -239,25 +258,27 @@
                 var key = $('[name="dataFileKey"]:checked').val();
                 var returnString = '';
                 $.each(data,function(index,value){
-                    /*var dataKey = value[key].replace(/[^\w\s\d]/gi,'');
-                    dataKey = dataKey.replace(/[\s]/gi,'-');*/
                     var dataKey = value[key].replace(/[\s]/gi,'-');
-                    returnString += dataKey+':\n';
+                    if($('#'+key+ '-hash').prop('checked')){
+                        console.log(dataKey.hashCode());
+                        returnString += dataKey.hashCode()+':\n';
+                    } else {
+                        returnString += dataKey+':\n';
+                    }
                     $.each(value,function(i,v){
                         var normIndex = i.replace(/[^\w\s\d]/gi,'');
                         normIndex = normIndex.replace(/[\s]/gi,'-');
                         if($('#'+normIndex+'-include').prop('checked')) {
                             if ($('#' + normIndex + '-text').prop('checked')) {
                                 returnString += '  ' + normIndex + ': |\r    ' + v + '\n';
+                            } else if($('#'+normIndex+ '-slug').prop('checked')) {
+                                var slugV = v.replace(/[^\w\d]/gi, '-');
+                                slugV = slugV.replace(/-(-+)/g, '-').toLowerCase();
+                                returnString += '  ' + normIndex + ': ' + slugV + '\n';
+                            } else if($('#'+normIndex+ '-hash').prop('checked')){
+                                returnString += '  ' + normIndex + ': ' + v.hashCode() + '\n';
                             } else {
-                                if($('#'+normIndex+ '-foreign-key').prop('checked')){
-                                    var normalize = v.replace(/[^\w\s\d]/gi,'');
-                                    normalize = normalize.replace(/[\s]/gi,'-');
-                                    normalize = normalize.toLowerCase();
-                                    returnString += '  ' + normIndex + ': ' + normalize + '\n';
-                                } else {
-                                    returnString += '  ' + normIndex + ': ' + v + '\n';
-                                }
+                                returnString += '  ' + normIndex + ': ' + v + '\n';
                             }
                         }
                     });
@@ -284,9 +305,15 @@
                         normIndex = normIndex.replace(/[\s]/gi,'-');
                         var re = new RegExp('\\['+normIndex+'\\]',"g");
                         template = template.replace(re,v);
+                        var re = new RegExp('\\['+normIndex+'\\|slug\\]',"g");
+                        var slugV = v.replace(/[^\w\d]/gi,'-');
+                        slugV = slugV.replace(/-(-+)/g,'-').toLowerCase();
+                        template = template.replace(re,slugV);
+                        var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
+                        template = template.replace(re, v.hashCode());
                     });
                     returnString += '---\n'+template+'\n'+'title: '+title+'\n---\r\n'+'<p>'+content+'</p>';
-                    zip.folder('test').file(fileDate+'-'+fileTitle+'.html',returnString);
+                    zip.folder('fromSheetsToJekyll').file(fileDate+'-'+fileTitle+'.html',returnString);
                     //$('#response').append(returnString);
                 });
 
@@ -295,7 +322,7 @@
                 var odsFile = zip.generate({type:'blob'});
                 var url = window.URL.createObjectURL(odsFile);
                 a.href = url;
-                a.download = 'test.zip';
+                a.download = 'fromSheetsToJekyll.zip';
                 a.click();
             }
         }
