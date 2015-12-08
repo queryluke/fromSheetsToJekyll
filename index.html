@@ -253,6 +253,7 @@
                                 if($('#'+normIndex+ '-foreign-key').prop('checked')){
                                     var normalize = v.replace(/[^\w\s\d]/gi,'');
                                     normalize = normalize.replace(/[\s]/gi,'-');
+                                    normalize = normalize.toLowerCase();
                                     returnString += '  ' + normIndex + ': ' + normalize + '\n';
                                 } else {
                                     returnString += '  ' + normIndex + ': ' + v + '\n';
