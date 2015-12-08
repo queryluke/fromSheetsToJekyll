@@ -222,7 +222,8 @@
                         contentSelect += '<option value="'+i+'">'+i+'</option>';
                         theHTML += '<tr><td><div class="radio"><label><input type="radio" name="dataFileKey" id="'+normIndex+'" value="'+i+'">'+i+'</label></td>';
                         theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-text"><input type="checkbox" id="'+normIndex+'-text">Text?</label></td>';
-                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-include"><input type="checkbox" id="'+normIndex+'-include" checked>Include?</label></td></tr>';
+                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-include"><input type="checkbox" id="'+normIndex+'-include" checked>Include?</label></td>';
+                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-foreign-key"><input type="checkbox" id="'+normIndex+'-foreign-key">Key?</label></td></tr>';
                     });
                     theHTML += '</tbody></table>';
                     $('#dataFileKey').html(theHTML);
@@ -249,7 +250,13 @@
                             if ($('#' + normIndex + '-text').prop('checked')) {
                                 returnString += '  ' + normIndex + ': |\r    ' + v + '\n';
                             } else {
-                                returnString += '  ' + normIndex + ': ' + v + '\n';
+                                if($('#'+normIndex+ '-foreign-key').prop('checked')){
+                                    var normalize = v.replace(/[^\w\s\d]/gi,'');
+                                    normalize = normalize.replace(/[\s]/gi,'-');
+                                    returnString += '  ' + normIndex + ': ' + normalize + '\n';
+                                } else {
+                                    returnString += '  ' + normIndex + ': ' + v + '\n';
+                                }
                             }
                         }
                     });
