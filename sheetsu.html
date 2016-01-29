@@ -42,7 +42,7 @@
             <p>Create an API, paste the URL below</p>
             <div class="form-group">
                 <label for="getUrl" class="control-label">Sheetsu API URL</label>
-                <input type="text" value="http://sheetsu.com/apis/fe179874" id="getUrl" class="form-control">
+                <input type="text" value="https://sheetsu.com/apis/be339c62" id="getUrl" class="form-control">
                 <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true" id="getUrlFeedback"></span>
                 <span id="getUrlStatus" class="sr-only">gtg!</span>
             </div><!-- /input-group -->
@@ -250,9 +250,9 @@
                             var key = $('[name="dataFileKey"]:checked').val();
                             var returnString = '';
                             $.each(response.result,function(index,value){
+                                console.log(value);
                                 var dataKey = value[key].replace(/[\s]/gi,'-');
                                 if($('#'+key+ '-hash').prop('checked')){
-                                    console.log(dataKey.hashCode());
                                     returnString += dataKey.hashCode()+':\n';
                                 } else {
                                     returnString += dataKey+':\n';
@@ -273,6 +273,14 @@
                                             returnString += '  ' + normIndex + ': ' + v + '\n';
                                         }
                                     }
+
+                                    // Just for code4lib
+                                    if(normIndex == 'Do-you-want-your-email-published-on-the-Code4Lib-Conference-Site'){
+                                        if(v == 'Yes'){
+                                            returnString += '  ' + 'Email: ' + value.Email + '\n';
+                                        }
+                                    }
+
                                 });
                                 returnString += '\n';
                             });
