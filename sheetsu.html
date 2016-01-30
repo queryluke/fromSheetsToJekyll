@@ -261,11 +261,7 @@
                                     normIndex = normIndex.replace(/[\s]/gi,'-');
                                     if($('#'+normIndex+'-include').prop('checked')) {
                                         if ($('#' + normIndex + '-text').prop('checked')) {
-                                            var string = JSON.stringify(v);
-                                            string = string.replace(/\\n\\n/,'trogdor');
-                                            string = string.replace(/[^\w\s\d]/gi,'');
-                                            string = string.replace(/trogdor/,'&lt;br&gt;');
-                                            returnString += '  ' + normIndex + ': |\r    ' + string + '\n';
+                                            returnString += '  ' + normIndex + ': |\r    ' + v + '\n';
                                         } else if($('#'+normIndex+ '-slug').prop('checked')) {
                                             var slugV = v.replace(/[^\w\d]/gi, '-');
                                             slugV = slugV.replace(/-(-+)/g, '-').toLowerCase();
