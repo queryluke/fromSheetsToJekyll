@@ -38,29 +38,23 @@
 <div class="container">
     <div class="row">
         <div class="col-xs-12">
-            <h2>Step 1: <small>publish your sheet to the web, paste the URL below</small></h2>
+            <h2>Step 1: <small>Download your Google Sheet as a CSV, upload here</small></h2>
             <div class="form-group">
-                <label for="getUrl" class="control-label">Public URL of the Google Sheet</label>
-                <input type="text" value="" id="getUrl" class="form-control">
+                <label for="csvFile" class="control-label">CSV File</label>
+                <input type="file" id="csvFile" class="form-control">
                 <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true" id="getUrlFeedback"></span>
                 <span id="getUrlStatus" class="sr-only">gtg!</span>
             </div><!-- /input-group -->
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <h2>Step 2: <small>Check that your url works</small></h2>
             <div id="getUrlAlert" class="hidden alert alert-success">
                 <h3>You're gtg, dude or dudette! <span class="glyphicon glyphicon-thumbs-up"></span></h3>
             </div>
-            <button class="btn btn-default" type="button" id="checkUrl">Check</button>
         </div>
     </div>
 </div>
 <div class="container hidden" id="apiOk">
     <div class="row">
         <div class="col-xs-12">
-            <h2>Step 3: <small>Choose what type of file you want to make</small></h2>
+            <h2>Step 2: <small>Choose what type of file you want to make</small></h2>
             <table class="table">
                 <thead>
                 <tr><th>Type</th><th>Description</th></tr>
@@ -74,7 +68,7 @@
             <!-- Nav tabs -->
             <ul class="nav nav-tabs" role="tablist">
                 <li role="presentation" class="active"><a href="#dataFile" aria-controls="dataFile" role="tab" data-toggle="tab">Jekyll Data File</a></li>
-                <li role="presentation"><a href="#templates" aria-controls="templates" role="tab" data-toggle="tab">Templates</a></li>
+                <li role="presentation"><a href="#template" aria-controls="templates" role="tab" data-toggle="tab">Templates</a></li>
                 <li role="presentation"><a href="#simpleJson" aria-controls="simpleJson" role="tab" data-toggle="tab">Json</a></li>
             </ul>
 
@@ -85,7 +79,7 @@
                     <h4>Select A Key</h4>
                     <div id="dataFileKey"></div>
                 </div>
-                <div role="tabpanel" class="tab-pane" id="templates">
+                <div role="tabpanel" class="tab-pane" id="template">
                     <h3>Create html files for the _post directory</h3>
                     <!-- Button trigger modal -->
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#frontMatterModal">
@@ -146,13 +140,13 @@
     </div>
     <div class="row">
         <div class="col-xs-12">
-            <h2>Step 4: <small>Boomshakalaka!</small></h2>
+            <h2>Step 3: <small>Boomshakalaka!</small></h2>
             <button class="btn btn-default" id="boom">Boomshakalaka!</button>
         </div>
     </div>
     <div class="row hidden" id="step5">
         <div class="col-xs-12">
-            <h2>Step 5: <small>DATA!</small></h2>
+            <h2>Step 4: <small>DATA!</small></h2>
             <!-- Trigger -->
             <button class="cp-btn btn" data-clipboard-target="#response">
                 Copy to clipboard
@@ -162,31 +156,18 @@
     </div>
 </div>
 </body>
-<div id="loader" class="pageload-overlay">
-    <div class="spin-container">
-        <div class="spinner">
-            <div class="rect1"></div>
-            <div class="rect2"></div>
-            <div class="rect3"></div>
-            <div class="rect4"></div>
-            <div class="rect5"></div>
-        </div>
-    </div>
-</div><!-- /pageload-overlay -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <!-- Latest compiled and minified JavaScript -->
 <script src="bootstrap/js/bootstrap.min.js"></script>
-<script src="scripts/tabletop.js"></script>
+<script src="scripts/jquery-csv.js"></script>
 <script src="scripts/jszip.js"></script>
 <script src="scripts/clipboard.js"></script>
 <script>
     $(function(){
 
-        $( document ).ajaxStart(function() {
-            $( "#loader" ).addClass('show');
-        });
-        $( document ).ajaxComplete(function() {
-            $( "#loader" ).removeClass('show');
+        $('#csvFile').on('change',function(){
+            parseFile(this.files[0]);
+            createForm();
         });
 
         String.prototype.hashCode = function() {
@@ -204,138 +185,163 @@
             return hash;
         };
 
-        function getSheet(wtd) {
+        function parseFile(file){
+            var reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function(event){
+                var csv = event.target.result;
+                var data = $.csv.toObjects(csv);
+                localStorage.setItem('table',JSON.stringify(data));
+                localStorage.setItem('columns',JSON.stringify(Object.keys(data[0])));
+            };
+            reader.onerror = function(){ alert('Unable to read ' + file.fileName); };
+        }
 
-            if (wtd == 'dataFile') {
-                var key = $('[name="dataFileKey"]:checked').val();
-                if (typeof key == 'undefined') {
-                    alert('Please select a key');
-                    return;
-                }
+        function normalizeKey(key){
+            var normIndex = key.toLowerCase().trim();
+            normIndex = normIndex.replace(/[^\w\s\d]/gi,'');
+            normIndex = normIndex.replace(/[\s]/gi,'-');
+            return normIndex;
+        }
+
+        function createForm(){
+            var data = JSON.parse(localStorage.getItem('table'));
+            var columns = JSON.parse(localStorage.getItem('columns'));
+            if(typeof data != 'undefined'){
+                //unhide the rest of the form
+                $('#getUrlFeedback, #getUrlAlert, #apiOk').removeClass('hidden');
+
+                //Give user feedback
+                $('#csvFile').parents('.form-group').addClass('has-feedback has-success');
+
+                var theHTML = '<table class="table table-condensed"><tbody>';
+                var frontMatterKeys = '<ul class="list-unstyled">';
+                var contentSelect = '';
+                $.each(columns,function(i,v){
+                    var normIndex = normalizeKey(v);
+                    frontMatterKeys += '<li>'+normIndex+'</li>';
+                    contentSelect += '<option value="'+normIndex+'">'+v+'</option>';
+                    theHTML += '<tr><td><div class="radio"><label><input type="radio" name="dataFileKey" id="'+normIndex+'" value="'+normIndex+'">'+v+'</label></td>';
+                    theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-text"><input type="checkbox" id="'+normIndex+'-text">Text?</label></td>';
+                    theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-include"><input type="checkbox" id="'+normIndex+'-include" checked>Include?</label></td>';
+                    theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-slug"><input type="checkbox" id="'+normIndex+'-slug">Slugify?</label></td>';
+                    theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-hash"><input type="checkbox" id="'+normIndex+'-hash">Hash?</label></td></tr>';
+                });
+                theHTML += '</tbody></table>';
+                $('#dataFileKey').html(theHTML);
+                $('#frontMatterKeys').html(frontMatterKeys);
+                $('#jekyllContent, #fileTitle').html(contentSelect);
+            } else {
+                console.log('table is undefined')
             }
+        }
 
-            var url = $('#getUrl').val();
+        function simpleJson(){
+            $('#response').html(localStorage.getItem('table'));
+            $('#step5').removeClass('hidden');
+        }
 
-            Tabletop.init({
-                key: url,
-                callback: callbackList[wtd],
-                simpleSheet: true
+        function dataFile() {
+            var data = JSON.parse(localStorage.getItem('table'));
+            var columns = JSON.parse(localStorage.getItem('columns'));
+            var key = normalizeKey($('[name="dataFileKey"]:checked').val());
+            var returnString = '';
+            $.each(data,function(index,value){
+                var dataKey = normalizeKey(value[findKey(columns,key)]);
+                if($('#'+key+ '-hash').prop('checked')){
+                    returnString += dataKey.hashCode()+':\n';
+                } else {
+                    returnString += dataKey+':\n';
+                }
+                $.each(value,function(i,v){
+                    var normIndex = normalizeKey(i);
+
+                    if($('#'+normIndex+'-include').prop('checked')) {
+                        returnValue = v;
+
+                        if($('#'+normIndex+ '-slug').prop('checked')) {
+                            returnValue = normalizeKey(returnValue);
+                        }
+                        if($('#'+normIndex+ '-hash').prop('checked')) {
+                            returnValue = returnValue.hashCode();
+                        }
+
+                        if ($('#' + normIndex + '-text').prop('checked')) {
+                            returnString += '  ' + normIndex + ': |\r    ' + returnValue + '\n';
+                        } else {
+
+                            returnString += '  ' + normIndex + ': ' + returnValue + '\n';
+                        }
+                    }
+                });
+                returnString += '\n';
+            });
+            $('#response').html(returnString);
+        }
+
+        function template() {
+            var zip = new JSZip();
+            var key = $('#jekyllContent').val();
+            var fileDate = $('#fileDate').val();
+            var fileTitleKey = $('#fileTitle').val();
+            $.each(data,function(index,value){
+                var returnString = '';
+                var template = $('#addFrontMatter').val();
+                var content = value[key];
+                var fileTitle =  value[fileTitleKey].replace(/[^\w\s\d]/gi,'');
+                fileTitle = fileTitle.replace(/[\s]/gi,'-');
+                var title = value[fileTitleKey];
+                title = title.replace(':','&#58;');
+                $.each(value,function(i,v){
+                    var normIndex = i.replace(/[^\w\s\d]/gi,'');
+                    normIndex = normIndex.replace(/[\s]/gi,'-');
+                    var re = new RegExp('\\['+normIndex+'\\]',"g");
+                    template = template.replace(re,v);
+                    var re = new RegExp('\\['+normIndex+'\\|slug\\]',"g");
+                    var slugV = v.replace(/[^\w\d]/gi,'-');
+                    slugV = slugV.replace(/-(-+)/g,'-').toLowerCase();
+                    template = template.replace(re,slugV);
+                    var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
+                    template = template.replace(re, v.hashCode());
+                });
+                returnString += '---\n'+template+'\n'+'title: '+title+'\n---\r\n'+'<p>'+content+'</p>';
+                zip.folder('fromSheetsToJekyll').file(fileDate+'-'+fileTitle+'.html',returnString);
             });
 
-
+            var a = document.createElement('a');
+            var odsFile = zip.generate({type:'blob'});
+            var url = window.URL.createObjectURL(odsFile);
+            a.href = url;
+            a.download = 'fromSheetsToJekyll.zip';
+            a.click();
         }
-        var callbackList = {
-            checkUrl: function checkUrl(data,tabletop) {
-                if(typeof data != 'undefined'){
-                    $('#getUrlFeedback, #getUrlAlert, #apiOk').removeClass('hidden');
-                    $('#getUrl').parents('.form-group').addClass('has-feedback has-success');
-                    var singleResponse = data[0];
-                    var theHTML = '<table class="table table-condensed"><tbody>';
-                    var frontMatterKeys = '<ul class="list-unstyled">';
-                    var contentSelect = '';
-                    $.each(singleResponse,function(i,v){
-                        var normIndex = i.replace(/[^\w\s\d]/gi,'');
-                        normIndex = normIndex.replace(/[\s]/gi,'-');
-                        frontMatterKeys += '<li>'+normIndex+'</li>';
-                        contentSelect += '<option value="'+i+'">'+i+'</option>';
-                        theHTML += '<tr><td><div class="radio"><label><input type="radio" name="dataFileKey" id="'+normIndex+'" value="'+i+'">'+i+'</label></td>';
-                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-text"><input type="checkbox" id="'+normIndex+'-text">Text?</label></td>';
-                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-include"><input type="checkbox" id="'+normIndex+'-include" checked>Include?</label></td>';
-                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-slug"><input type="checkbox" id="'+normIndex+'-slug">Slugify?</label></td>';
-                        theHTML += '<td><div class="checkbox"><label for="'+normIndex+'-hash"><input type="checkbox" id="'+normIndex+'-hash">Hash?</label></td></tr>';
-                    });
-                    theHTML += '</tbody></table>';
-                    $('#dataFileKey').html(theHTML);
-                    $('#frontMatterKeys').html(frontMatterKeys);
-                    $('#jekyllContent, #fileTitle').html(contentSelect);
-                }
-            },
-            simpleJson: function simpleJson(data,tabletop){
-                $('#response').html(JSON.stringify(data));
-                $('#step5').removeClass('hidden');
-            },
-            dataFile: function dataFile(data,tabletop){
-                var key = $('[name="dataFileKey"]:checked').val();
-                var returnString = '';
-                $.each(data,function(index,value){
-                    var dataKey = value[key].replace(/[\s]/gi,'-');
-                    if($('#'+key+ '-hash').prop('checked')){
-                        console.log(dataKey.hashCode());
-                        returnString += dataKey.hashCode()+':\n';
-                    } else {
-                        returnString += dataKey+':\n';
-                    }
-                    $.each(value,function(i,v){
-                        var normIndex = i.replace(/[^\w\s\d]/gi,'');
-                        normIndex = normIndex.replace(/[\s]/gi,'-');
-                        if($('#'+normIndex+'-include').prop('checked')) {
-                            if ($('#' + normIndex + '-text').prop('checked')) {
-                                returnString += '  ' + normIndex + ': |\r    ' + v + '\n';
-                            } else if($('#'+normIndex+ '-slug').prop('checked')) {
-                                var slugV = v.replace(/[^\w\d]/gi, '-');
-                                slugV = slugV.replace(/-(-+)/g, '-').toLowerCase();
-                                returnString += '  ' + normIndex + ': ' + slugV + '\n';
-                            } else if($('#'+normIndex+ '-hash').prop('checked')){
-                                returnString += '  ' + normIndex + ': ' + v.hashCode() + '\n';
-                            } else {
-                                returnString += '  ' + normIndex + ': ' + v + '\n';
-                            }
-                        }
-                    });
-                    returnString += '\n';
-                });
-                $('#response').html(returnString);
-                $('#step5').removeClass('hidden');
-            },
-            templates: function templates(data,tabletop){
-                var zip = new JSZip();
-                var key = $('#jekyllContent').val();
-                var fileDate = $('#fileDate').val();
-                var fileTitleKey = $('#fileTitle').val();
-                $.each(data,function(index,value){
-                    var returnString = '';
-                    var template = $('#addFrontMatter').val();
-                    var content = value[key];
-                    var fileTitle =  value[fileTitleKey].replace(/[^\w\s\d]/gi,'');
-                    fileTitle = fileTitle.replace(/[\s]/gi,'-');
-                    var title = value[fileTitleKey];
-                    title = title.replace(':','&#58;');
-                    $.each(value,function(i,v){
-                        var normIndex = i.replace(/[^\w\s\d]/gi,'');
-                        normIndex = normIndex.replace(/[\s]/gi,'-');
-                        var re = new RegExp('\\['+normIndex+'\\]',"g");
-                        template = template.replace(re,v);
-                        var re = new RegExp('\\['+normIndex+'\\|slug\\]',"g");
-                        var slugV = v.replace(/[^\w\d]/gi,'-');
-                        slugV = slugV.replace(/-(-+)/g,'-').toLowerCase();
-                        template = template.replace(re,slugV);
-                        var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
-                        template = template.replace(re, v.hashCode());
-                    });
-                    returnString += '---\n'+template+'\n'+'title: '+title+'\n---\r\n'+'<p>'+content+'</p>';
-                    zip.folder('fromSheetsToJekyll').file(fileDate+'-'+fileTitle+'.html',returnString);
-                    //$('#response').append(returnString);
-                });
-
-                //$('#step5').removeClass('hidden');
-                var a = document.createElement('a');
-                var odsFile = zip.generate({type:'blob'});
-                var url = window.URL.createObjectURL(odsFile);
-                a.href = url;
-                a.download = 'fromSheetsToJekyll.zip';
-                a.click();
-            }
-        }
-
-
-        $('#checkUrl').click(function(){
-            getSheet('checkUrl');
-        });
 
         $('#boom').click(function(){
             var wtd = $('.tab-pane.active').attr('id');
-            getSheet(wtd);
+            switch(wtd){
+                case 'dataFile':
+                    dataFile();
+                    break;
+                case 'template':
+                    template();
+                    break;
+                case 'simpleJson':
+                    simpleJson();
+                    break;
+            }
+            $('#step5').removeClass('hidden');
+
         });
+
+        function findKey(keys, normalized){
+            var correctKey = '';
+            $.each(keys, function(i,v){
+                if(normalizeKey(v) == normalized){
+                    correctKey = v;
+                }
+            });
+            return correctKey;
+        }
 
         var clipboard = new Clipboard('.cp-btn');
 
