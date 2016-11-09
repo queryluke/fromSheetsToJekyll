@@ -5,7 +5,6 @@
     <title>fromSheetsToJekyll</title>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="ripple.css">
     <style>
         .pageload-overlay {
             position: fixed;
@@ -25,6 +24,9 @@
             margin: auto;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
+        }
+        body {
+            margin-bottom: 4rem;
         }
     </style>
 </head>
@@ -198,10 +200,12 @@
         }
 
         function normalizeKey(key){
-            var normIndex = key.toLowerCase().trim();
-            normIndex = normIndex.replace(/[^\w\s\d]/gi,'');
-            normIndex = normIndex.replace(/[\s]/gi,'-');
-            return normIndex;
+            if(key){
+                var normIndex = key.toLowerCase().trim();
+                normIndex = normIndex.replace(/[^\w\s\d]/gi,'');
+                normIndex = normIndex.replace(/[\s]/gi,'-');
+                return normIndex;
+            }
         }
 
         function createForm(){
@@ -247,16 +251,30 @@
             var key = normalizeKey($('[name="dataFileKey"]:checked').val());
             var returnString = '';
             $.each(data,function(index,value){
+
                 var dataKey = normalizeKey(value[findKey(columns,key)]);
-                if($('#'+key+ '-hash').prop('checked')){
-                    returnString += dataKey.hashCode()+':\n';
+                var subspace = false;
+                if(dataKey){
+                    if($('#'+key+ '-hash').prop('checked')){
+                        returnString += dataKey.hashCode()+':\n';
+                    } else {
+                        returnString += dataKey+':\n';
+                    }
                 } else {
-                    returnString += dataKey+':\n';
+                    returnString += '-';
+                    subspace = true;
                 }
                 $.each(value,function(i,v){
                     var normIndex = normalizeKey(i);
 
                     if($('#'+normIndex+'-include').prop('checked')) {
+
+                        if(subspace){
+                            var space = ' ';
+                        } else {
+                            var space = '  ';
+                        }
+
                         returnValue = v;
 
                         if($('#'+normIndex+ '-slug').prop('checked')) {
@@ -267,11 +285,13 @@
                         }
 
                         if ($('#' + normIndex + '-text').prop('checked')) {
-                            returnString += '  ' + normIndex + ': |\r    ' + returnValue + '\n';
+                            returnString += space + normIndex + ': "' + returnValue + '"\n';
                         } else {
 
-                            returnString += '  ' + normIndex + ': ' + returnValue + '\n';
+                            returnString += space + normIndex + ': ' + returnValue + '\n';
                         }
+
+                        subspace = false;
                     }
                 });
                 returnString += '\n';
