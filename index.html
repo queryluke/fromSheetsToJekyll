@@ -285,11 +285,10 @@
                         }
 
                         if ($('#' + normIndex + '-text').prop('checked')) {
-                            returnString += space + normIndex + ': "' + returnValue + '"\n';
-                        } else {
-
-                            returnString += space + normIndex + ': ' + returnValue + '\n';
+                            returnValue = '"'+returnValue.replace(/\"/gm,'\\"')+'"';
                         }
+
+                        returnString += space + normIndex + ': ' + returnValue + '\n';
 
                         subspace = false;
                     }
