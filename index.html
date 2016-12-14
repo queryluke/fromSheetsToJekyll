@@ -317,21 +317,23 @@
                         title = v;
                         fileTitle =  v.replace(/[^\w\s\d]/gi,'');
                         fileTitle = fileTitle.replace(/[\s]/gi,'-')
-                    } else if(normIndex == contentKey) {
-                        content = v;
-                    } else {
-
-                        var re = new RegExp('\\['+normIndex+'\\]',"g");
-                        template = template.replace(re,v);
-
-                        var re = new RegExp('\\['+normIndex+'\\|slug\\]',"g");
-                        var slugV = v.replace(/[^\w\d]/gi,'-');
-                        slugV = slugV.replace(/-(-+)/g,'-').toLowerCase();
-                        template = template.replace(re,slugV);
-
-                        var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
-                        template = template.replace(re, v.hashCode());
                     }
+
+                    if(normIndex == contentKey) {
+                        content = v;
+                    }
+
+                    var re = new RegExp('\\['+normIndex+'\\]',"g");
+                    template = template.replace(re,v);
+
+                    var re = new RegExp('\\['+normIndex+'\\|slug\\]',"g");
+                    var slugV = v.replace(/[^\w\d]/gi,'-');
+                    slugV = slugV.replace(/-(-+)/g,'-').toLowerCase();
+                    template = template.replace(re,slugV);
+
+                    var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
+                    template = template.replace(re, v.hashCode());
+                    
                 });
                 title = title.replace(':','&#58;');
                 returnString += '---\n'+template+'\n'+'title: '+title+'\n---\r\n'+'<p>'+content+'</p>';
