@@ -116,7 +116,7 @@
                     </div>
                     <div class="form-group">
                         <label for="fileDate">Date: Enter a date to prepend to the file titles</label>
-                        <input type="text" class="form-control" id="fileDate" name="fileDate" value="2016-03-07">
+                        <input type="text" class="form-control" id="fileDate" name="fileDate" value="2017-03-06">
                         <span class="help-block">yyyy-mm-dd</span>
                     </div>
                     <!-- Modal -->
@@ -300,29 +300,40 @@
 
         function template() {
             var zip = new JSZip();
-            var key = $('#jekyllContent').val();
+            var data = JSON.parse(localStorage.getItem('table'));
+            var contentKey = $('#jekyllContent').val();
             var fileDate = $('#fileDate').val();
             var fileTitleKey = $('#fileTitle').val();
             $.each(data,function(index,value){
                 var returnString = '';
                 var template = $('#addFrontMatter').val();
-                var content = value[key];
-                var fileTitle =  value[fileTitleKey].replace(/[^\w\s\d]/gi,'');
-                fileTitle = fileTitle.replace(/[\s]/gi,'-');
-                var title = value[fileTitleKey];
-                title = title.replace(':','&#58;');
+                var content = '';
+                var title = '';
+                var fileTitle = '';
                 $.each(value,function(i,v){
-                    var normIndex = i.replace(/[^\w\s\d]/gi,'');
-                    normIndex = normIndex.replace(/[\s]/gi,'-');
-                    var re = new RegExp('\\['+normIndex+'\\]',"g");
-                    template = template.replace(re,v);
-                    var re = new RegExp('\\['+normIndex+'\\|slug\\]',"g");
-                    var slugV = v.replace(/[^\w\d]/gi,'-');
-                    slugV = slugV.replace(/-(-+)/g,'-').toLowerCase();
-                    template = template.replace(re,slugV);
-                    var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
-                    template = template.replace(re, v.hashCode());
+                    var normIndex = normalizeKey(i);
+
+                    if(normIndex == fileTitleKey){
+                        title = v;
+                        fileTitle =  v.replace(/[^\w\s\d]/gi,'');
+                        fileTitle = fileTitle.replace(/[\s]/gi,'-')
+                    } else if(normIndex == contentKey) {
+                        content = v;
+                    } else {
+
+                        var re = new RegExp('\\['+normIndex+'\\]',"g");
+                        template = template.replace(re,v);
+
+                        var re = new RegExp('\\['+normIndex+'\\|slug\\]',"g");
+                        var slugV = v.replace(/[^\w\d]/gi,'-');
+                        slugV = slugV.replace(/-(-+)/g,'-').toLowerCase();
+                        template = template.replace(re,slugV);
+
+                        var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
+                        template = template.replace(re, v.hashCode());
+                    }
                 });
+                title = title.replace(':','&#58;');
                 returnString += '---\n'+template+'\n'+'title: '+title+'\n---\r\n'+'<p>'+content+'</p>';
                 zip.folder('fromSheetsToJekyll').file(fileDate+'-'+fileTitle+'.html',returnString);
             });
