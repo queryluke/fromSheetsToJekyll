@@ -94,18 +94,18 @@
                         <textarea id="addFrontMatter" class="form-control"></textarea>
                         <span class="help-block">
                             <strong>DO NOT INCLUDE THE <code>title:</code> front matter. This script will use the value from File Title below</strong><br>
-                            To include sheets data as front matter, provide a name, colon, then the normalized sheets key wrapped in brackets. eg. <code>location: [Presentation-Location]</code>
+                            To include sheets data as front matter, provide a name, colon, then the normalized lowercase sheets key wrapped in brackets, e.g. <code>location: [presentation-location]</code>
                             <br>Additionally, you can make a list of associated values using hyphen+space. e.g.
-                            <br>
-                            <br>If the content is sensitive but you want to use it as a key to other content (e.g. email) you can add <code>|hash</code> to the end of the key.
-                            <br>You can slugify the key by adding <code>|slug</code> to the end of the key.
-                            <br>
+                            <br><br>
                             <code>
                                 speakers:<br>
-                                - [Speaker-1]<br>
-                                - [Speaker-2]
-                            </code>
-                            <br>If the data is linked to a yaml data file, be sure to use the key of that entry (e.g. a speaker's email instead of the speaker's name)
+                                - [speaker-1]<br>
+                                - [speaker-2]
+                            </code><br>
+                            <br>If the content is sensitive but you want to use it as a key to other content (e.g. email) you can add <code>|hash</code> to the end of the key.
+                            <br>You can slugify the key by adding <code>|slug</code> to the end of the key <code>slugTitle: [title|slug]</code>.
+                            <br>
+                            <br>If the data is linked to a yaml data file, be sure to use the key of that entry (e.g. a speaker's email instead of the speaker's name).
                         </span>
                     </div>
                     <div class="form-group">
@@ -335,7 +335,7 @@
 
                     var re = new RegExp('\\['+normIndex+'\\|hash\\]',"g");
                     template = template.replace(re, v.hashCode());
-                    
+
                 });
                 title = title.replace(':','&#58;');
                 returnString += '---\n'+template+'\n'+'title: '+title+'\n---\r\n'+'<p>'+content+'</p>';
